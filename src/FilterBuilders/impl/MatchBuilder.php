@@ -21,6 +21,6 @@ class MatchBuilder extends FilterBuilder
     }
     public function buildQuery($query, $filter)
     {
-        return $query->whereRaw("MATCH (" . $filter['field'] . ") AGAINST (" . $filter['value'] . " IN BOOLEAN MODE)");
+        return $query->whereRaw("MATCH (" . $filter['field'] . ") AGAINST ('" . $filter['value'] . "' IN BOOLEAN MODE)");
     }
 }
