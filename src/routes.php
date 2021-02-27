@@ -1,33 +1,35 @@
 <?php
 $prefix = env('APIFY_PREFIX_URL', 'api');
-if (method_exists($this->app, 'group')) {
-    $this->app->group(['prefix' => $prefix], function ($router) {
-        $router->post('upload', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@upload',
-        ]);
-        $router->get('{entity}', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@get',
-        ]);
-        $router->get('{entity}/{id:[0-9]+}', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@show',
-        ]);
-        $router->post('{entity}', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@store',
-        ]);
-        $router->put('{entity}/{id:[0-9]+}', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@update',
-        ]);
-        $router->patch('{entity}/{id:[0-9]+}', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@patch',
-        ]);
-        $router->delete('{entity}/{id:[0-9]+}', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@destroy',
-        ]);
-        $router->delete('{entity}', [
-            'uses' => 'Megaads\Apify\Controllers\APIController@destroyBulk',
-        ]);
-    });
-} else {
+
+function apifyRouteRegister($router) {
+    $router->post('upload', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@upload',
+    ]);
+    $router->get('{entity}', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@get',
+    ]);
+    $router->get('{entity}/{id:[0-9]+}', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@show',
+    ]);
+    $router->post('{entity}', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@store',
+    ]);
+    $router->put('{entity}/{id:[0-9]+}', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@update',
+    ]);
+    $router->patch('{entity}/{id:[0-9]+}', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@patch',
+    ]);
+    $router->delete('{entity}/{id:[0-9]+}', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@destroy',
+    ]);
+    $router->delete('{entity}', [
+        'uses' => 'Megaads\Apify\Controllers\APIController@destroyBulk',
+    ]);
+}
+
+if (app() instanceof \Illuminate\Foundation\Application) {
+    // Laravel
     Route::group(['prefix' => $prefix], function () {
         Route::post('upload', [
             'uses' => 'Megaads\Apify\Controllers\APIController@upload',
@@ -54,4 +56,15 @@ if (method_exists($this->app, 'group')) {
             'uses' => 'Megaads\Apify\Controllers\APIController@destroyBulk',
         ]);
     });
+} else {
+    // Lumen
+    if (method_exists($this->app, 'group')) {
+        $this->app->group(['prefix' => $prefix], function ($router) {
+            apifyRouteRegister($router);
+        });
+    } else {
+        $this->app->router->group(['prefix' => $prefix], function ($router) {
+            apifyRouteRegister($router);
+        });
+    }
 }
