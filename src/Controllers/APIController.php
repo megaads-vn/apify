@@ -50,31 +50,29 @@ class APIController extends BaseController
         $result = [];
         $status = "successful";
         $model = $this->getModel($entity);
+        if (empty($model->getFillable())) {
+            return $this->error([
+                'result' => 'Fillable empty array! Please check again model.',
+            ]);
+        }
         $inputs = $request->except(\Megaads\Apify\Middlewares\AuthMiddleware::$apiTokenField);
 
         try {
+            \DB::beginTransaction();
             if (isset($inputs[0]) && is_array($inputs[0])) {
-                \DB::beginTransaction();
-                try {
-                    foreach ($inputs as $input) {
-                        $result[] = $model->create($input);
-                    }
-                    \DB::commit();
-                } catch (\Exception $exc) {
-                    \Log::info('input: ' . json_encode($input));
-                    \Log::error($exc);
-                    $status = "fail";
-                    $result = $exc->getMessage();
-                    \DB::rollback();
+                foreach ($inputs as $input) {
+                    $result[] = $model->create($input)->fresh();
                 }
             } else {
-                $result = $model->create($inputs);
+                $result = $model->create($inputs)->fresh();
             }
+            \DB::commit();
         } catch (\Exception $exc) {
             \Log::info('input: ' . json_encode($inputs));
             \Log::error($exc);
             $status = "fail";
             $result = $exc->getMessage();
+            \DB::rollback();
         }
         if ($status == "successful") {
             return $this->success([
@@ -95,12 +93,12 @@ class APIController extends BaseController
         $obj = $model->find($id);
         if ($obj == null) {
             return $this->error([
-                'result' => '404',
+                'result' => 404,
             ]);
         }
-        $result = $obj->update($attributes);
+        $obj->update($attributes);
         return $this->success([
-            'result' => $result,
+            'result' => $obj,
         ]);
     }
 
@@ -112,12 +110,12 @@ class APIController extends BaseController
         $obj = $model->find($id);
         if ($obj == null) {
             return $this->error([
-                'result' => '404',
+                'result' => 404,
             ]);
         }
-        $result = $obj->update($attributes);
+        $obj->update($attributes);
         return $this->success([
-            'result' => $result,
+            'result' => $obj,
         ]);
     }
 
@@ -128,14 +126,15 @@ class APIController extends BaseController
         $obj = $model->find($id);
         if ($obj == null) {
             return $this->error([
-                'result' => '404',
+                'result' => 404,
             ]);
         }
-        $result = $obj->delete();
+        $obj->delete();
         return $this->success([
-            'result' => $result,
+            'result' => $obj,
         ]);
     }
+
     public function destroyBulk($entity, Request $request)
     {
         \Megaads\Apify\Middlewares\AuthMiddleware::checkPermission($entity, "delete");
