@@ -144,7 +144,7 @@ class BaseController extends DynamicController
         } else if ($params['metric'] == 'increment'
             || $params['metric'] == 'decrement') {
             if (count($params['fields']) > 0) {
-                $query = $query->$params['metric']($params['fields'][0]);
+                $query = $query->{$params['metric']}($params['fields'][0]);
             }
             return $query;
         } else {
