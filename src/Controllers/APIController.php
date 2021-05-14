@@ -50,21 +50,24 @@ class APIController extends BaseController
         $result = [];
         $status = "successful";
         $model = $this->getModel($entity);
-        if (empty($model->getFillable())) {
-            return $this->error([
-                'result' => 'Fillable empty array! Please check again model.',
-            ]);
-        }
         $inputs = $request->except(\Megaads\Apify\Middlewares\AuthMiddleware::$apiTokenField);
 
         try {
             \DB::beginTransaction();
             if (isset($inputs[0]) && is_array($inputs[0])) {
                 foreach ($inputs as $input) {
-                    $result[] = $model->create($input)->fresh();
+                    if (!empty($model->getFillable())) {
+                        $result[] = $model->create($input)->fresh();
+                    } else {
+                        $result[] = $model->create($input);
+                    }
                 }
             } else {
-                $result = $model->create($inputs)->fresh();
+                if (!empty($model->getFillable())) {
+                    $result = $model->create($inputs)->fresh();
+                } else {
+                    $result = $model->create($inputs);
+                }
             }
             \DB::commit();
         } catch (\Exception $exc) {
