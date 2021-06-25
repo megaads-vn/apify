@@ -127,7 +127,7 @@ Complex conditions that combine `AND`, `OR` and `NOT` will be available soon.
 
 ### Scope functions
 ```
-/api/order?scopes=orderMeta(values=[adwords,12984656295];keys=[from,campaign_id]),customer(keyword=nguyen van nam)
+/api/order?scopes=orderMeta(values=[adwords,123123];keys=[from,campaign_id]),customer(keyword=nguyen van nam)
 ```
 
 ## Entity conventions
