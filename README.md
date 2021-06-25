@@ -125,6 +125,11 @@ Apify supports filtering records based on more than one `AND`, `NOT` condition b
 
 Complex conditions that combine `AND`, `OR` and `NOT` will be available soon.
 
+### Scope functions
+```
+/api/order?scopes=orderMeta(values=[adwords,12984656295];keys=[from,campaign_id]),customer(keyword=nguyen van nam)
+```
+
 ## Entity conventions
 
 Apify works by a simple mechanism, looking for a model class that correspond to the API entity, otherwise the API entity will be matched to a suitable DB table. That means no model class is required to create, do it only in the case of defining relationships, customizing.
@@ -216,11 +221,6 @@ Even nested relationships
 
 ```
 /api/city?filters=nation.location_code=EU,districts.name~land
-```
-
-### Scope functions
-```
-/api/order?scopes=orderMeta(values=[adwords,12984656295];keys=[from,campaign_id]),customer(keyword=nguyen van nam)
 ```
 
 ## Metric
