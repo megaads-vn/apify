@@ -131,6 +131,10 @@ Complex conditions that combine `AND`, `OR` and `NOT` will be available soon.
 ```
 
 ```php
+namespace App\Models;
+
+class Order extends \Megaads\Apify\Models\BaseModel
+{
     public function scopeCustomer($query, $params) {
         if (isset($params['keyword'])) {
             //do something
@@ -142,6 +146,7 @@ Complex conditions that combine `AND`, `OR` and `NOT` will be available soon.
             //do something
         }
     }
+}
 ```
 
 ## Entity conventions
