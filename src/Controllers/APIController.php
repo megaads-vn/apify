@@ -18,6 +18,8 @@ class APIController extends BaseController
         $model = $this->buildSortQuery($model, $queryParams['sorts']);
         $model = $this->buildFilterQuery($model, $queryParams['filters']);
         $model = $this->buildGroupQuery($model, $queryParams['groups']);
+        $model = $this->buildScopeQuery($model, $queryParams['scopes']);
+
         if ($queryParams['metric'] == 'count'
             || $queryParams['metric'] == 'first'
             || $queryParams['metric'] == 'increment'

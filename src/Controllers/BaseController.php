@@ -66,6 +66,7 @@ class BaseController extends DynamicController
             'embeds' => [],
             'filters' => [],
             'groups' => [],
+            'scopes' => [],
             'embeds_fields' => [],
         ];
         // pagination
@@ -101,6 +102,17 @@ class BaseController extends DynamicController
             foreach ($embeds as $embed) {
                 if ($embed != null) {
                     $retval['embeds'][] = $embed;
+                }
+            }
+        }
+        // scopes
+        if ($request->has('scopes')) {
+            preg_match_all('/([a-zA-z0-9]+)\([^\)]*\)/', $request->scopes, $scopes);
+            if (count($scopes) > 0) {
+                foreach ($scopes[0] as $scope) {
+                    if ($scope != null) {
+                        $retval['scopes'][] = $scope;
+                    }
                 }
             }
         }
@@ -265,6 +277,43 @@ class BaseController extends DynamicController
                     $query = $query->groupBy($this->standardizedQueryAlias($query, $group));
                 } else {
                     $query = $query->groupBy(($tableAlias ? $tableAlias . '.' : '') . $group);
+                }
+            }
+        }
+        return $query;
+    }
+
+    protected function buildScopeQuery($query, $scopes)
+    {
+        if ($scopes != null && count($scopes) > 0) {
+            foreach ($scopes as $scope) {
+                preg_match("/([a-zA-z0-9]+)\((.*)\)/", $scope, $matches);
+                if ($matches && count($matches) > 2) {
+                    $function = $matches[1];
+                    $matches = $matches[2];
+                    $matches = explode(';', $matches);
+                    $params = [];
+                    foreach ($matches as $item) {
+                        $arr = explode('=', $item);
+                        $size = count($arr);
+                        if($size) {
+                            if ($size == 1) {
+                                $params[$arr[0]] = '';
+                            } else if ($size == 2) {
+                                if ($arr[1] && strpos('[', $arr[1]) == 0) {
+                                    preg_match("/\[(.*)\]/", $arr[1], $values);
+                                    if (count($values) > 1) {
+                                        $params[$arr[0]] = explode(',', $values[1]);
+                                    } else {
+                                        $params[$arr[0]] = $arr[1];
+                                    }
+                                } else {
+                                    $params[$arr[0]] = $arr[1];
+                                }
+                            }
+                        }
+                    }
+                    $query = $query->$function($params);
                 }
             }
         }
