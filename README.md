@@ -218,6 +218,11 @@ Even nested relationships
 /api/city?filters=nation.location_code=EU,districts.name~land
 ```
 
+### Scope functions
+```
+/api/order?scopes=orderMeta(values=[adwords,12984656295];keys=[from,campaign_id]),customer(keyword=nguyen van nam)
+```
+
 ## Metric
 
 ### metric=get (by default): Retrieve all records that match the query
