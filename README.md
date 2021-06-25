@@ -130,6 +130,20 @@ Complex conditions that combine `AND`, `OR` and `NOT` will be available soon.
 /api/order?scopes=orderMeta(values=[adwords,123123];keys=[from,campaign_id]),customer(keyword=nguyen van nam)
 ```
 
+```php
+    public function scopeCustomer($query, $params) {
+        if (isset($params['keyword'])) {
+            //do something
+        }
+    }
+
+    public function scopeOrderMeta($query, $params) {
+        if (isset($params['keys']) && isset($params['values'])) {
+            //do something
+        }
+    }
+```
+
 ## Entity conventions
 
 Apify works by a simple mechanism, looking for a model class that correspond to the API entity, otherwise the API entity will be matched to a suitable DB table. That means no model class is required to create, do it only in the case of defining relationships, customizing.
