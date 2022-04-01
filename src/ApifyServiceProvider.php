@@ -22,7 +22,7 @@ class ApifyServiceProvider extends ServiceProvider
                 Middlewares\BasicAuthMiddleware::class,
             ]);
         } else {
-            $kernel = $this->app->make('Illuminate\Co`ntracts\Http\Kernel');
+            $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
             $kernel->pushMiddleware('\Megaads\Apify\Middlewares\CorsMiddleware');
             $kernel->pushMiddleware('\Megaads\Apify\Middlewares\ValidationMiddleware');
             $kernel->pushMiddleware('\Megaads\Apify\Middlewares\AuthMiddleware');
