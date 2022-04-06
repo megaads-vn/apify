@@ -1,5 +1,7 @@
 <?php
 $prefix = env('APIFY_PREFIX_URL', 'api');
+$middlewares = config('apify.middlewares');
+
 if (!function_exists('apifyRouteRegister')) {
     function apifyRouteRegister($router) {
         $router->post('upload', [
@@ -31,7 +33,7 @@ if (!function_exists('apifyRouteRegister')) {
 
 if (app() instanceof \Illuminate\Foundation\Application) {
     // Laravel
-    Route::group(['prefix' => $prefix], function () {
+    Route::group(['prefix' => $prefix, 'middleware' => $middlewares], function () {
         Route::post('upload', [
             'uses' => 'Megaads\Apify\Controllers\APIController@upload',
         ]);
@@ -60,11 +62,11 @@ if (app() instanceof \Illuminate\Foundation\Application) {
 } else {
     // Lumen
     if (method_exists($this->app, 'group')) {
-        $this->app->group(['prefix' => $prefix], function ($router) {
+        $this->app->group(['prefix' => $prefix, 'middleware' => $middlewares], function ($router) {
             apifyRouteRegister($router);
         });
     } else {
-        $this->app->router->group(['prefix' => $prefix], function ($router) {
+        $this->app->router->group(['prefix' => $prefix, 'middleware' => $middlewares], function ($router) {
             apifyRouteRegister($router);
         });
     }

@@ -5,6 +5,7 @@ return [
     'logging' => true,
     'api_token_field' => 'api_token',
     'auth' => 'basic',
+    'middlewares' => ['basic'],
     'basicAuthentication' => [
         'username' => 'johndoe',
         'password' => 'exampl3@@'
