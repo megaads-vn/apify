@@ -53,7 +53,7 @@ class BaseModel extends Model
     public function publish($data, $exchange, $exchange_type = 'fanout', $routing_key = '')
     {
         $enable = env('APIFY_MQ_ENABLE', false);
-        if ($enable) {
+        if ($enable || (isset($this->mqEnable) && $this->mqEnable == true)) {
             $host = env('APIFY_MQ_HOST');
             $port = env('APIFY_MQ_PORT');
             $username = env('APIFY_MQ_USERNAME');
