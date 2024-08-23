@@ -17,7 +17,7 @@ class AuthMiddleware extends BaseController
     }
 
     public static function checkPermission ($entity, $permission) {
-        if (static::$configs['enable']) {
+        if (isset(static::$configs['enable']) && static::$configs['enable']) {
             $allowPermissions = static::getPermissionsByEntity($entity);
             if (in_array('deny', $allowPermissions)) {
                 static::responseError("Access denied!");
@@ -54,7 +54,7 @@ class AuthMiddleware extends BaseController
     public function handle($request, Closure $next)
     {
         $this::$configs = $this->loadConfig();
-        if ($this::$configs['enable']) {
+        if (isset($this::$configs['enable']) && $this::$configs['enable']) {
             $this::$apiTokenField = $this::$configs['api_token_field'];
             $apiToken = $request->input($this::$apiTokenField);
             $this::$allowPermissions = $this->getPermissions($apiToken, $this::$configs);
@@ -68,7 +68,7 @@ class AuthMiddleware extends BaseController
 
     public function getPermissions ($apiToken, $configs) {
         $retval = [];
-        if ($configs['enable']) {
+        if (isset($configs['enable']) && $configs['enable']) {
             foreach ($configs['users'] as $user) {
                 if ($user['token'] == $apiToken) {
                     $retval = $user['permissions'];

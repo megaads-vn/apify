@@ -29,10 +29,12 @@ class ApifyServiceProvider extends ServiceProvider
             $this->app->routeMiddleware([
                 'basic' => Middlewares\BasicAuthMiddleware::class
             ]);
+        } else {
+            $this->app['router']->aliasMiddleware('basic', Middlewares\BasicAuthMiddleware::class);
         }
-        if (method_exists($this->app, 'configure')) {
-            $this->app->configure('apify');
-        }
+        // if (method_exists($this->app, 'configure')) {
+        //     $this->app->configure('apify');
+        // }
 
         include __DIR__ . '/routes.php';
     }
