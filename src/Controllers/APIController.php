@@ -6,6 +6,22 @@ use Megaads\Apify\Controllers\BaseController;
 
 class APIController extends BaseController
 {
+    private static $dangerousExtensions = [
+        'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'phar',
+        'exe', 'bat', 'cmd', 'sh', 'bash', 'cgi', 'pl', 'py', 'rb',
+        'jsp', 'jspx', 'asp', 'aspx', 'war',
+        'htaccess', 'htpasswd', 'shtml',
+    ];
+
+    private static $dangerousMimeTypes = [
+        'application/x-php',
+        'application/x-httpd-php',
+        'text/x-php',
+        'application/x-executable',
+        'application/x-sharedlib',
+        'application/x-shellscript',
+    ];
+
     public function get($entity, Request $request)
     {
         \Megaads\Apify\Middlewares\AuthMiddleware::checkPermission($entity, "read");
@@ -166,9 +182,19 @@ class APIController extends BaseController
         }
 
         if (!empty($customDirectoryPath)) {
+            $customDirectoryPath = $this->sanitizePath($customDirectoryPath);
+            if ($customDirectoryPath === false) {
+                return $this->error(["result" => "Invalid directory path!"]);
+            }
             $directoryPath = $directoryPath . '/' . $customDirectoryPath;
             if (!file_exists($directoryPath)) {
-                mkdir($directoryPath, 0777, true);
+                mkdir($directoryPath, 0755, true);
+            }
+        }
+        if (!empty($customFileName)) {
+            $customFileName = $this->sanitizePath($customFileName);
+            if ($customFileName === false) {
+                return $this->error(["result" => "Invalid file name!"]);
             }
         }
         if (!empty($fileBase64)) {
@@ -222,8 +248,37 @@ class APIController extends BaseController
         return $this->success($result);
     }
 
+    private function sanitizePath($path) {
+        $path = str_replace(['\\', "\0"], '/', $path);
+        if (preg_match('/\.\./', $path)) {
+            return false;
+        }
+        $path = preg_replace('/[^a-zA-Z0-9_\-\.\/]/', '', $path);
+        $path = trim($path, '/');
+        if (empty($path)) {
+            return false;
+        }
+        return $path;
+    }
+
+    private function isFileDangerous($file) {
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (in_array($extension, self::$dangerousExtensions)) {
+            return true;
+        }
+        $mimeType = $file->getMimeType();
+        if (in_array($mimeType, self::$dangerousMimeTypes)) {
+            return true;
+        }
+        return false;
+    }
+
     private function validateUpload($rule, $file) {
         $retVal = ['status' => false];
+        if ($this->isFileDangerous($file)) {
+            $retVal['message'] = 'File type not allowed for security reasons!';
+            return $retVal;
+        }
         if(!empty($rule['extensions']) && is_array($rule['extensions'])) {
             if(!in_array(strtolower($file->getClientOriginalExtension()), $rule['extensions'])) {
                 $retVal['message'] = 'Extension not valid!';
@@ -275,10 +330,16 @@ class APIController extends BaseController
         $image = base64_decode($file);
         if (imagecreatefromstring(base64_decode($file)) !== false ) {
             $f = finfo_open();
-            $type = finfo_buffer($f, $image, FILEINFO_MIME_TYPE);
+            $mimeType = finfo_buffer($f, $image, FILEINFO_MIME_TYPE);
+            finfo_close($f);
 
-            if ($type) {
-                $type = explode('/', $type)[1];
+            if (in_array($mimeType, self::$dangerousMimeTypes)) {
+                return $retVal;
+            }
+
+            $type = '';
+            if ($mimeType) {
+                $type = explode('/', $mimeType)[1];
          }
          if (!empty($customFileName)) {
              $newFileName = $customFileName . '-'. time() . '.' . $type;

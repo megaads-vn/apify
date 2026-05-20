@@ -215,7 +215,7 @@ class BaseController extends DynamicController
         foreach ($sorts as $column => $type) {
             if (preg_match("/^raw\(/", $column)) {
                 preg_match('/raw\((.+)\)/', $column, $matches);
-                if (count($matches) == 2) {
+                if (count($matches) == 2 && $this->sanitizeRawExpression($matches[1])) {
                     $query = $query->orderByRaw(\DB::raw($matches[1]));
                 }
             } else if (str_contains($column, '.')) {
@@ -245,7 +245,7 @@ class BaseController extends DynamicController
             foreach ($selections as $selection) {
                 if (preg_match("/^raw\(/", $selection)) {
                     preg_match('/raw\((.+)\)/', $selection, $matches);
-                    if (count($matches) == 2) {
+                    if (count($matches) == 2 && $this->sanitizeRawExpression($matches[1])) {
                         $query = $query->addSelect(\DB::raw($matches[1]));
                     }
                 } else if (preg_match("/^count/", $selection)
@@ -253,7 +253,9 @@ class BaseController extends DynamicController
                     || preg_match("/^max/", $selection)
                     || preg_match("/^min/", $selection)
                     || preg_match("/^avg/", $selection)) {
-                    $query = $query->addSelect(\DB::raw($selection));
+                    if ($this->sanitizeRawExpression($selection)) {
+                        $query = $query->addSelect(\DB::raw($selection));
+                    }
                 } else {
                     if (str_contains($selection, '.')) {
                         $query = $query->addSelect($this->standardizedQueryAlias($query, $selection));
@@ -359,6 +361,15 @@ class BaseController extends DynamicController
             $query = $query->with($embeds);
         }
         return $query;
+    }
+
+    public static function sanitizeRawExpression($expression)
+    {
+        $dangerous = '/;\s*|--|\b(DROP|ALTER|TRUNCATE|DELETE|INSERT|UPDATE|CREATE|EXEC|EXECUTE|UNION\s+SELECT|INTO\s+OUTFILE|INTO\s+DUMPFILE|LOAD_FILE|SLEEP|BENCHMARK|xp_)\b/i';
+        if (preg_match($dangerous, $expression)) {
+            return false;
+        }
+        return true;
     }
 
     protected function standardizedQueryAlias($query, $selection)

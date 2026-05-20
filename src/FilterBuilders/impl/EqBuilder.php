@@ -2,6 +2,7 @@
 namespace Megaads\Apify\FilterBuilders\Impl;
 
 use Megaads\Apify\FilterBuilders\FilterBuilder;
+use Megaads\Apify\Controllers\BaseController;
 
 class EqBuilder extends FilterBuilder
 {
@@ -25,8 +26,17 @@ class EqBuilder extends FilterBuilder
             $query = $query->whereNull($filter['field']);
         } else {
             if (strrpos(strtolower($filter['field']), '.raw') > 0) {
-                $query = $query->where(function ($query) use ($filter) {
-                    $query->whereRaw($filter['value']);
+                if (!BaseController::sanitizeRawExpression($filter['value'])) {
+                    return $query;
+                }
+                $safePattern = '/^([a-zA-Z0-9_\.`]+)\s*(=|!=|<>|>=|<=|>|<|LIKE|NOT\s+LIKE)\s*(.+)$/i';
+                $nullPattern = '/^([a-zA-Z0-9_\.`]+)\s+(IS\s+NULL|IS\s+NOT\s+NULL)$/i';
+                $query = $query->where(function ($query) use ($filter, $safePattern, $nullPattern) {
+                    if (preg_match($nullPattern, $filter['value'], $rawMatches)) {
+                        $query->whereRaw($rawMatches[1] . ' ' . strtoupper($rawMatches[2]));
+                    } elseif (preg_match($safePattern, $filter['value'], $rawMatches)) {
+                        $query->whereRaw($rawMatches[1] . ' ' . $rawMatches[2] . ' ?', [trim($rawMatches[3])]);
+                    }
                 });
             } else {
                 $query = $query->where($filter['field'], '=', $filter['value']);
