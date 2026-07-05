@@ -365,10 +365,33 @@ class BaseController extends DynamicController
 
     public static function sanitizeRawExpression($expression)
     {
-        $dangerous = '/;\s*|--|\b(DROP|ALTER|TRUNCATE|DELETE|INSERT|UPDATE|CREATE|EXEC|EXECUTE|UNION\s+SELECT|INTO\s+OUTFILE|INTO\s+DUMPFILE|LOAD_FILE|SLEEP|BENCHMARK|xp_)\b/i';
-        if (preg_match($dangerous, $expression)) {
+        $expression = (string) $expression;
+        // Collapse every whitespace run (space, tab, newline) into a single space so
+        // the patterns below cannot be bypassed with unusual whitespace.
+        $normalized = preg_replace('/\s+/', ' ', $expression);
+
+        // 1) Data-manipulation/destruction keywords and classic injection techniques,
+        //    including comment sequences (--, #, /*, */) used to split/evade keywords.
+        $dangerous = '/;|--|#|\/\*|\*\/|\b(DROP|ALTER|TRUNCATE|DELETE|INSERT|UPDATE|REPLACE|CREATE|GRANT|REVOKE|EXEC|EXECUTE|CALL|HANDLER|INTO\s+OUTFILE|INTO\s+DUMPFILE|LOAD_FILE|LOAD\s+DATA|SLEEP|BENCHMARK|WAITFOR|xp_|sp_)\b/i';
+        if (preg_match($dangerous, $normalized)) {
             return false;
         }
+
+        // 2) Block subqueries and any cross-table data read (data exfiltration).
+        //    Legitimate raw expressions (count(id), sum(view_count) as view_sum,
+        //    case ... end) never need these keywords; their presence means a nested
+        //    query intended to extract data.
+        $subquery = '/\b(SELECT|FROM|UNION|JOIN|WHERE|HAVING|LIMIT|OFFSET)\b/i';
+        if (preg_match($subquery, $normalized)) {
+            return false;
+        }
+
+        // 3) Block references to system tables/schemas used to probe the DB structure.
+        $systemObjects = '/(information_schema|performance_schema|pg_catalog|sqlite_master|sysobjects|syscolumns)/i';
+        if (preg_match($systemObjects, $normalized)) {
+            return false;
+        }
+
         return true;
     }
 
