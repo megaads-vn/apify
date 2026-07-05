@@ -396,9 +396,18 @@ class BaseController extends DynamicController
             return false;
         }
 
-        // 3) Block references to system tables/schemas used to probe the DB structure.
-        $systemObjects = '/(information_schema|performance_schema|pg_catalog|sqlite_master|sysobjects|syscolumns)/i';
+        // 3) Block references to system tables/schemas used to probe the DB structure,
+        //    keywords that read a table without SELECT/FROM (TABLE/VALUES statements),
+        //    and system session variables (@@version, @@datadir, ...).
+        $systemObjects = '/@@|\b(TABLE|VALUES|information_schema|performance_schema|mysql|sys|pg_catalog|sqlite_master|sysobjects|syscolumns)\b/i';
         if (preg_match($systemObjects, $normalized)) {
+            return false;
+        }
+
+        // 4) Block server/metadata functions that leak environment info without a
+        //    subquery (version(), user(), database(), current_user, ...).
+        $metadata = '/\b(VERSION|USER|CURRENT_USER|SESSION_USER|SYSTEM_USER|DATABASE|SCHEMA|CONNECTION_ID|CURRENT_ROLE)\s*\(|\b(CURRENT_USER|SESSION_USER|SYSTEM_USER|CURRENT_ROLE)\b/i';
+        if (preg_match($metadata, $normalized)) {
             return false;
         }
 
