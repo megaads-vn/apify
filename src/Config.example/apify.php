@@ -2,7 +2,8 @@
 
 return [
     'enable' => true,
-    'logging' => true,
+    'logging' => true,    
+    'raw_query_enable' => true,
     'api_token_field' => 'api_token',
     'auth' => 'basic',
     'middlewares' => ['basic'],

@@ -215,7 +215,7 @@ class BaseController extends DynamicController
         foreach ($sorts as $column => $type) {
             if (preg_match("/^raw\(/", $column)) {
                 preg_match('/raw\((.+)\)/', $column, $matches);
-                if (count($matches) == 2 && $this->sanitizeRawExpression($matches[1])) {
+                if (self::isRawQueryEnabled() && count($matches) == 2 && $this->sanitizeRawExpression($matches[1])) {
                     $query = $query->orderByRaw(\DB::raw($matches[1]));
                 }
             } else if (str_contains($column, '.')) {
@@ -245,7 +245,7 @@ class BaseController extends DynamicController
             foreach ($selections as $selection) {
                 if (preg_match("/^raw\(/", $selection)) {
                     preg_match('/raw\((.+)\)/', $selection, $matches);
-                    if (count($matches) == 2 && $this->sanitizeRawExpression($matches[1])) {
+                    if (self::isRawQueryEnabled() && count($matches) == 2 && $this->sanitizeRawExpression($matches[1])) {
                         $query = $query->addSelect(\DB::raw($matches[1]));
                     }
                 } else if (preg_match("/^count/", $selection)
@@ -361,6 +361,16 @@ class BaseController extends DynamicController
             $query = $query->with($embeds);
         }
         return $query;
+    }
+
+    /**
+     * Whether raw() query expressions (fields, sort, .raw filters) are allowed.
+     * Controlled by config('apify.raw_query_enable'); defaults to true (allowed)
+     * when the key is not defined, to stay backward compatible.
+     */
+    public static function isRawQueryEnabled()
+    {
+        return config('apify.raw_query_enable', true) !== false;
     }
 
     public static function sanitizeRawExpression($expression)

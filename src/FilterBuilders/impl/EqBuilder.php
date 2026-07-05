@@ -26,7 +26,7 @@ class EqBuilder extends FilterBuilder
             $query = $query->whereNull($filter['field']);
         } else {
             if (strrpos(strtolower($filter['field']), '.raw') > 0) {
-                if (!BaseController::sanitizeRawExpression($filter['value'])) {
+                if (!BaseController::isRawQueryEnabled() || !BaseController::sanitizeRawExpression($filter['value'])) {
                     return $query;
                 }
                 $safePattern = '/^([a-zA-Z0-9_\.`]+)\s*(=|!=|<>|>=|<=|>|<|LIKE|NOT\s+LIKE)\s*(.+)$/i';
