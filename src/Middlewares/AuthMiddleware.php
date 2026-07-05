@@ -33,7 +33,7 @@ class AuthMiddleware extends BaseController
     public static function getPermissionsByEntity ($entity) {
         $retval = [];
         foreach (static::$allowPermissions as $key => $value) {
-            if ($key == $entity) {
+            if (strtolower($key) == strtolower($entity)) {
                 $retval = $value;
                 break;
             }
