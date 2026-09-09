@@ -3,9 +3,15 @@ namespace Megaads\Apify\Controllers;
 
 use Illuminate\Http\Request;
 use Megaads\Apify\Controllers\BaseController;
+use Megaads\Apify\Middlewares\CheckEntityExistMiddleware;
 
 class APIController extends BaseController
 {
+    public function __construct()
+    {
+        $this->middleware(CheckEntityExistMiddleware::class);
+    }
+
     private static $dangerousExtensions = [
         'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'phar',
         'exe', 'bat', 'cmd', 'sh', 'bash', 'cgi', 'pl', 'py', 'rb',
