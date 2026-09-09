@@ -10,7 +10,7 @@ class CheckEntityExistMiddleware
     public function handle($request, \Closure $next)
     {
         $routeInfo = $request->route();
-        if (!empty($routeInfo[2]['entity']) && !Schema::hasTable($routeInfo[2]['entity'])) {
+        if (!empty($routeInfo[2]['entity']) && (strpos($routeInfo[2]['entity'], '.') !== false) || !Schema::hasTable($routeInfo[2]['entity'])) {
             return response()->json([
                 'error' => '404 not found',
             ], 404);
