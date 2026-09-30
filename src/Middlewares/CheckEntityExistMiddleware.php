@@ -11,8 +11,14 @@ class CheckEntityExistMiddleware
     {
         $routeInfo = $request->route();
         if (
-            !empty($routeInfo[2]['entity']) && (strpos($routeInfo[2]['entity'], '.') !== false) 
-            || (!$this->hasModel($routeInfo[2]['entity']) && !Schema::hasTable($routeInfo[2]['entity']))
+            (
+                !empty($routeInfo[2]['entity']) && strpos($routeInfo[2]['entity'], '.') !== false
+            ) 
+            || (
+                !empty($routeInfo[2]['entity']) 
+                && !$this->hasModel($routeInfo[2]['entity']) 
+                && !Schema::hasTable($routeInfo[2]['entity'])
+            )
         ) {
             return response()->json([
                 'error' => '404 not found',
